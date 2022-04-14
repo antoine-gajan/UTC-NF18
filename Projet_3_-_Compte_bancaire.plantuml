@@ -1,0 +1,114 @@
+@startuml
+
+class Client{
+  nom : string
+  telephone : int {unique}
+  adresse : string
+}
+
+class Compte{
+  date_creation : date
+  statut : Statut
+  solde : decimal
+}
+
+class CompteCourant{
+  date_decouvert : date
+  decouvert_autorise : decimal
+}
+
+class CompteRevolving{
+  solde : decimal
+  taux_interet_journalier() : decimal
+}
+
+class MinMaxMois{
+  annee : int
+  mois : Mois
+  min : decimal
+  max : decimal
+}
+
+class CompteEpargne{
+}
+
+abstract class Operation{
+  montant : int
+  date : date
+  etat : Etat
+  operation(decimal) : void
+}
+
+class OperationGuichet{
+}
+
+class OperationCheque{
+  type : depot_emission
+}
+
+class OperationCarteBancaire{
+}
+
+class Virement{
+}
+
+class Destinataire{
+  nom : string
+  telephone : string {unique}
+  adresse : string
+}
+
+note left of CompteEpargne : solde >= 300 \nOpération guichet\net virement uniquement\npossibles
+note top of CompteRevolving : solde <= 0
+note top of CompteCourant : {date_decouvert nullable}
+note bottom of MinMaxMois : {(annee, mois) local key}
+note right of Operation : statut = ferme => aucune operation possible\nstatut = bloque => seulement credit ou guichet
+
+enum Statut{
+  ouvert
+  bloque
+  ferme
+}
+
+enum depot_emission{
+  depot
+  emission
+}
+
+enum Etat{
+  non traite
+  en cours
+  traite
+}
+
+enum Mois{
+  Janvier
+  Fevrier
+  Mars
+  Avril
+  Mai
+  Juin
+  Juillet
+  Aout
+  Septembre
+  Octobre
+  Novembre
+  Decembre
+}
+
+CompteEpargne --> Compte
+CompteCourant --> Compte
+CompteRevolving --> Compte
+
+Operation <-- OperationGuichet
+Operation <-- OperationCheque
+Operation <-- OperationCarteBancaire
+Operation <-- Virement
+
+Compte "0..*"-"0..*" Client
+(Compte, Client) .. Operation
+Virement "0..*"--"1..1" Destinataire : Etre recu par >
+Compte *-- "0..*"MinMaxMois
+Compte "1..*"-----"1..*" Client : Appartenir
+
+@enduml
