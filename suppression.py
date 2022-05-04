@@ -7,7 +7,7 @@ def supprimerClient(cur):
         cur.commit()
     except:
         cur.rollback()
-        print("Erreur rencontréE. Impossible de supprimer ce client.")
+        print("Erreur rencontrée. Impossible de supprimer ce client.")
 
 def supprimerCompte(cur):
     """Fonction qui supprime un compte de la BDD"""

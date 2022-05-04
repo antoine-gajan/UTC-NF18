@@ -4,10 +4,10 @@ import psycopg2
 def connexion():
     """Fonction permettant de se connecter à la BDD"""
     #Identifiant de connexion
-    HOST = "tuxa.sme.utc"
-    USER = "nf18p054"
-    PASSWORD = "YktA3UMv"
-    DATABASE = "dbnf18p054"
+    HOST = "localhost"
+    USER = "postgres"
+    PASSWORD = "YOUR_PASSWORD"
+    DATABASE = "YOUR_DATABASE"
 
     #Ouverture de la connexion
     conn = psycopg2.connect(f"host={HOST} dbname={DATABASE} user={USER} password={PASSWORD}")

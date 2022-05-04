@@ -1,5 +1,3 @@
-import psycopg2
-from requete import *
 from insertion import *
 from connexion import *
 from affichage import *
@@ -28,7 +26,7 @@ def main():
                 print("Veuillez entrer un numéro correct.")
                 reponse = int(input("Votre choix : "))
             if repInsertion == 1:
-                #Ajout d'un client
+                #insererClient(cur)
             elif repInsertion == 2:
                 afficheMenuInsertionCompte()
                 repInsertionCompte = -1
@@ -54,13 +52,15 @@ def main():
                 print("Veuillez entrer un numéro correct.")
                 repSuppresion = int(input("Votre choix : "))
             if repSuppresion == 1:
-                #supprimerClient(cur)
+                print("*** Suppression d'un client")
+                supprimerClient(cur)
             elif repSuppresion == 2:
-                #supprimerCompte(cur)
+                print("*** Suppression d'un compte ***")
+                supprimerCompte(cur)
         # Affichage de la BDD
         elif reponse == 4:
         elif reponse == 5:
-            print("***Solde d'un compte***")
+            print("*** Solde d'un compte ***")
             date_creation = input("Date de création du compte (YYYY-MM-DD) : ")
             #Montant d'un compte
             solde = getSoldeCompte(cur, date_creation)
@@ -71,7 +71,7 @@ def main():
                 print(f"Le solde du compte est de : {solde[0][0]}")
         #Si l'utilisateur veut savoir le nombre d'opération faite sur un compte
         elif reponse == 6:
-            print("***Nombre des chèques émis par un client***")
+            print("*** Nombre des chèques émis par un client ***")
             numero = input("Numéro de téléphone du client : ")
             nombreChequeEmis = getNbCheque(cur, numero, "E")
             #Si le numéro de téléphone ne correspond à aucun numéro de la BDD
@@ -83,6 +83,9 @@ def main():
         if reponse == 7:
             print("Vous allez quitter le programme.")
             continuer = False
+            close(conn)
+
+
 
 if __name__ == "__main__":
     main()

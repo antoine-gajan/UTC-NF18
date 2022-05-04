@@ -2,6 +2,7 @@ import datetime
 import psycopg2
 
 from requete import *
+from modification import *
 
 def insererCompteCourant(curseur):
     """Fonction qui insère un compte courant dans la BDD"""
@@ -125,21 +126,21 @@ def insererOperation(curseur):
                 #Demande du montant
                 montant = int(input("Montant de l'opération (positif pour crédit, négatif pour débit) : "))
 
-                if (Typecompte(curseur, date_creation) == 'epargne' and getSoldeCompte(curseur, date_creation)[0][0] + montant < 300) :
-                    print("Pas de compte épargne en dessous de 300\nAnnulation de l'opération")
+                #Gestion des cas d'erreurs liés au type de compte
+                if (Typecompte(curseur, date_creation) == 'epargne' and getSoldeCompte(curseur, date_creation) + montant < 300) :
+                    print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte épargne avec un solde en dessous de 300 €.\nAnnulation de l'opération.")
                     return
-                if (Typecompte(curseur, date_creation) == 'revolving' and getSoldeCompte(curseur, date_creation)[0][0] + montant > 0) :
-                    print("Pas de compte revolving au dessus de 0\nAnnulation de l'opération")
+                if (Typecompte(curseur, date_creation) == 'revolving' and getSoldeCompte(curseur, date_creation) + montant > 0) :
+                    print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte revolving au dessus de 0 €.\nAnnulation de l'opération.")
                     return
-                if (Typecompte(curseur, date_creation) == 'revolving' and getSoldeCompte(curseur, date_creation)[0][0] + montant < GetMin(curseur, date_creation)) :
-                    print("Pas de compte revolving en dessous du minimum\nAnnulation de l'opération")
+                if (Typecompte(curseur, date_creation) == 'revolving' and getSoldeCompte(curseur, date_creation) + montant < GetMin(curseur, date_creation)) :
+                    print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte revolving en dessous du minimum autorisé.\nAnnulation de l'opération.")
                     return
-                if (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation)[0][0] + montant < -GetDecouvert(curseur, date_creation)) :
-                    print("Pas de compte courant en dessus du découvert autorisé\nAnnulation de l'opération")
+                if (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation) + montant < -GetDecouvert(curseur, date_creation)) :
+                    print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte courant en dessus du découvert autorisé.\nAnnulation de l'opération.")
                     return
-
                 if (Typecompte(curseur, date_creation) == 'epargne' and typeOpe[type] not in ['Guichet', 'Virement']):
-                    print("Les comptes épargnes ne peuvent faires que des opérations guichet et virment\nAnnulation de l'opération")
+                    print("Les comptes épargnes ne peuvent faires que des opérations guichet et virment.\nAnnulation de l'opération.")
                     return
 
                 #Traitement des cas particuliers si le compte est bloqué
@@ -163,6 +164,7 @@ def insererOperation(curseur):
                         curseur.execute(sql1)
                         curseur.execute(sql2)
                         curseur.commit()
+                        #Mise à jour de la table MinMaxMois
                         UpdateMinMaxMois(curseur, date_creation)
 
                     except:
@@ -187,6 +189,7 @@ def insererOperation(curseur):
                         curseur.execute(sql1)
                         curseur.execute(sql2)
                         curseur.commit()
+                        #Mise à jour de la table MinMaxMois
                         UpdateMinMaxMois(curseur, date_creation)
                     except:
                         print("L'ajout de l'opération a échoué.")
