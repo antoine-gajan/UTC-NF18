@@ -105,25 +105,43 @@ def insererOperation(curseur):
             date_creation = input("Date de création du compte où effectuer l'opération : ")
             if date_creation in [compte[0] for compte in comptesUtilisateur]:
                 #Vérification du statut du compte
-                statut = getInfosCompte(curseur, date_creation)[1]
+                statut = getInfosCompte(curseur, date_creation)[0][1]
                 #Si compte fermé, aucune opération possible
                 if statut == "fermé":
                     print("Le compte est fermé. Aucune opération possible.")
-                    exit()
+                    return
                 #Si statut bloqué, uniquement opération guichet et chèque avec montant > 0 (crédit)
                 elif statut == "bloqué":
                     typeOpe = {"1" : "Guichet", "2" : "Chèque"}
-                    type = input("Type d'opération effectuée : ")
+                    type = input("Type d'opération effectuée (1 : Guichet, 2 : Chèque)\n  ->")
                     while type not in ["1", "2"]:
                         type = input("Ce type d'opération n'existe pas.\nType d'opération effectuée : ")
                 #Si le compte est ouvert, tous types d'opération possible
                 else:
-                    typeOpe = {"1" : "Guichet", "2" : "Chèque", "3" : "Virement"}
-                    type = input("Type d'opération effectuée : ")
-                    while type not in ["1", "2", "3"]:
+                    typeOpe = {"1" : "Guichet", "2" : "Chèque", "3" : "Virement", "4" : "CB"}
+                    type = input("Type d'opération effectuée (1 : Guichet, 2 : Chèque, 3 : Virement, 4 : Carte bancaire)\n  ->")
+                    while type not in ["1", "2", "3", "4"]:
                         type = input("Ce type d'opération n'existe pas.\nType d'opération effectuée : ")
                 #Demande du montant
                 montant = int(input("Montant de l'opération (positif pour crédit, négatif pour débit) : "))
+
+                if (Typecompte(curseur, date_creation) == 'epargne' and getSoldeCompte(curseur, date_creation)[0][0] + montant < 300) :
+                    print("Pas de compte épargne en dessous de 300\nAnnulation de l'opération")
+                    return
+                if (Typecompte(curseur, date_creation) == 'revolving' and getSoldeCompte(curseur, date_creation)[0][0] + montant > 0) :
+                    print("Pas de compte revolving au dessus de 0\nAnnulation de l'opération")
+                    return
+                if (Typecompte(curseur, date_creation) == 'revolving' and getSoldeCompte(curseur, date_creation)[0][0] + montant < GetMin(curseur, date_creation)) :
+                    print("Pas de compte revolving en dessous du minimum\nAnnulation de l'opération")
+                    return
+                if (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation)[0][0] + montant < -GetDecouvert(curseur, date_creation)) :
+                    print("Pas de compte courant en dessus du découvert autorisé\nAnnulation de l'opération")
+                    return
+
+                if (Typecompte(curseur, date_creation) == 'epargne' and typeOpe[type] not in ['Guichet', 'Virement']):
+                    print("Les comptes épargnes ne peuvent faires que des opérations guichet et virment\nAnnulation de l'opération")
+                    return
+
                 #Traitement des cas particuliers si le compte est bloqué
                 if montant < 0 and statut == "bloqué":
                     print("Seules les opérations de crédit sont possibles. Annulation de l'opération.")
@@ -133,18 +151,20 @@ def insererOperation(curseur):
                         #Ajout de l'opération
                         sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', 'Chèque', 'depot')"
                         #Modification du solde
-                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
+                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation)[0][0] + montant}' WHERE date_creation = '{date_creation}')"
 
                     else:
                         #Ajout de l'opération
-                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', '{typeOpe[{type}]}', NULL)"
+                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', '{typeOpe[type]}', NULL)"
                         #Modification du solde
-                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
+                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation)[0][0] + montant}' WHERE date_creation = '{date_creation}')"
                     #Ajout des reqûetes à la BDD
                     try:
                         curseur.execute(sql1)
                         curseur.execute(sql2)
                         curseur.commit()
+                        UpdateMinMaxMois(curseur, date_creation)
+
                     except:
                         print("L'ajout de l'opération a échoué.")
                         curseur.rollback()
@@ -155,18 +175,19 @@ def insererOperation(curseur):
                     etat = "traité"
                     #Si le montant est négatif, c'est un débit
                     if type == "2" and montant < 0:
-                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', '{typeOpe[{type}]}', 'depot')"
+                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', '{typeOpe[type]}', 'depot')"
                     elif type == "2":
-                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', '{typeOpe[{type}]}', 'emission')"
+                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', '{typeOpe[type]}', 'emission')"
                     else:
-                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', '{typeOpe[{type}]}', NULL)"
+                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_DATE(), '{etat}', '{typeOpe[type]}', NULL)"
                     #Modification du solde du compte
-                    sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
+                    sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation)[0][0] + montant}' WHERE date_creation = '{date_creation}')"
                     # Ajout dans la BDD
                     try:
                         curseur.execute(sql1)
                         curseur.execute(sql2)
                         curseur.commit()
+                        UpdateMinMaxMois(curseur, date_creation)
                     except:
                         print("L'ajout de l'opération a échoué.")
                         curseur.rollback()
