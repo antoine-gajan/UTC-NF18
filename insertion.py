@@ -1,11 +1,34 @@
 import datetime
 import psycopg2
+from psycopg2 import errors
 
-from requete import *
 from modification import *
+
+def insererClient(curseur):
+    print("*** Ajout d'un client ***")
+    nom = input("Nom du client : ")
+    telephone = input("Telephone : ")
+    adresse = input("Adresse : ")
+    sql = f"INSERT INTO Client (nom, telephone, adresse) VALUES({nom}, {telephone}, {adresse})"
+    try:
+        curseur.execute(sql)
+        curseur.commit()
+    except psycopg2.IntegrityError:
+        print("Impossible de créer le compte client : problème sur la clé primaire.")
+        curseur.rollback()
+    except psycopg2.errors.UniqueViolation:
+        print("Violation d'une contrainte d'unicité. Annulation de la création du compte client.")
+        curseur.rollback()
+    except:
+        print("La création du compte client a échoué.")
+        curseur.rollback()
+    else:
+        print("Création du compte client réalisé avec succès.")
+
 
 def insererCompteCourant(curseur):
     """Fonction qui insère un compte courant dans la BDD"""
+    print("*** Ajout d'un compte courant ***")
     #Création de la date de création
     date_creation = input("Date de création du compte (YYYY-MM-DD) : ")
     date_creation = date_creation.split('-')
@@ -41,6 +64,12 @@ def insererCompteCourant(curseur):
         curseur.execute(sql1)
         curseur.execute(sql2)
         curseur.commit()
+    except psycopg2.IntegrityError:
+        print("Impossible de créer le compte : problème sur la clé primaire.")
+        curseur.rollback()
+    except psycopg2.errors.UniqueViolation:
+        print("Violation d'une contrainte d'unicité. Annulation de la création du compte.")
+        curseur.rollback()
     except:
         print("La création du compte a échoué.")
         curseur.rollback()
@@ -49,10 +78,9 @@ def insererCompteCourant(curseur):
 
 def insererCompteRevolving(curseur):
     """Fonction qui insère un compte courant dans la BDD"""
+    print("*** Ajout d'un compte revolving ***")
     #Création de la date de création
     date_creation = input("Date de création du compte (YYYY-MM-DD) : ")
-    date_creation = date_creation.split('-')
-    date_creation_check = datetime.datetime(int(date_creation[0]), int(date_creation[1]), int(date_creation[2]))
     #Decouvert max autorisé
     montant_min = int(input("Montant minimal négocié : "))
     if montant_min > 0 :
@@ -77,6 +105,47 @@ def insererCompteRevolving(curseur):
         curseur.execute(sql1)
         curseur.execute(sql2)
         curseur.commit()
+    except psycopg2.IntegrityError:
+        print("Impossible de créer le compte : problème sur la clé primaire.")
+        curseur.rollback()
+    except psycopg2.errors.UniqueViolation:
+        print("Violation d'une contrainte d'unicité. Annulation de la création du compte.")
+        curseur.rollback()
+    except:
+        print("La création du compte a échoué.")
+        curseur.rollback()
+    else:
+        print("Création du compte réalisé avec succès.")
+
+def insererCompteEpargne(curseur):
+    """Fonction qui insère un compte d'épargne dans la BDD"""
+    print("*** Ajout d'un compte d'épargne ***")
+    #Création de la date de création
+    date_creation = input("Date de création du compte (YYYY-MM-DD) : ")
+    #Solde du compte
+    solde = int(input("Solde du compte : "))
+    if solde < 300 :
+        #Impossible
+        solde = int(input("Le solde doit être supérieur à 300€.\nSolde du compte : "))
+    #Statut du compte
+    statut = {"1":"ouvert", "2":"bloqué", "3":"fermé"}
+    s = int(input("Statut du compte (1 : ouvert, 2 : bloqué, 3 : fermé) : "))
+    while s not in ["1", "2", "3"]:
+        s = input("Statut incorrect.\nStatut du compte (1 : ouvert, 2 : bloqué, 3 : fermé) : ")
+    #Requête SQL
+    sql1 = f"""INSERT INTO Compte VALUES(TO_DATE({date_creation}, 'YYYY-MM-DD'), '{statut[s]}', '{solde}');"""
+    sql2 = f"""INSERT INTO CompteEpargne VALUES(TO_DATE({date_creation}, 'YYYY-MM-DD'));"""
+    #Ajout dans la BDD
+    try:
+        curseur.execute(sql1)
+        curseur.execute(sql2)
+        curseur.commit()
+    except psycopg2.IntegrityError:
+        print("Impossible de créer le compte : problème sur la clé primaire.")
+        curseur.rollback()
+    except psycopg2.errors.UniqueViolation:
+        print("Violation d'une contrainte d'unicité. Annulation de la création du compte.")
+        curseur.rollback()
     except:
         print("La création du compte a échoué.")
         curseur.rollback()
@@ -85,6 +154,7 @@ def insererCompteRevolving(curseur):
 
 def insererOperation(curseur):
     """Fonction qui permet d'insérer une opération dans la BDD"""
+    print("*** Effectuer une opération ***")
     clients = getClients(curseur)
     #Test du nombre de clients
     if len(clients) == 0:
@@ -202,3 +272,51 @@ def insererOperation(curseur):
         #Message d'erreur, client inconnu
         else:
             print("Cet utilisateur n'est pas un client. Abandon de l'opération.")
+
+def insererAppartenir(curseur):
+    """Fonction qui rajoute un client comme propriétaire d'un compte"""
+    print("*** Ajouter une relation d'appartenance ***")
+    clients = getClients(curseur)
+    # Test du nombre de clients
+    if len(clients) == 0:
+        print("Aucun client dans la base de données. Veuillez d'abord ajouter un utilisateur.\nAbandon de l'ajout de propriétaire.")
+    else:
+        # Affichage de la liste des clients
+        print("Liste des clients (ID, nom) : ")
+        for client in clients:
+            print(f"{client[0]}\t{client[1]}")
+        # Demande de l'id du client
+        id = int(input("ID du client : "))
+        if id not in [client[0] for client in clients]:
+            print("Ce client n'existe pas.")
+            return
+        comptes = getAllComptes(curseur)
+        if len(comptes) == 0:
+            print("Aucun compte dans la base de données. Veuillez d'abord ajouter un compte.\nAbandon de l'ajout de propriétaire.")
+            return
+        #Affichage de tous les comptes
+        print("Liste des comptes de l'utilisateur choisi (date de création, statut, solde) : ")
+        for compte in comptes:
+            print(f"{compte[0]}\t{compte[1]}\t{compte[2]}")
+        date_creation = input("Date de création du compte où vous voulez être propriétaire (YYYY-MM-DD) : ")
+        if date_creation not in [compte[0] for compte in comptes]:
+            print("Ce compte n'existe pas. Abandon de l'ajout de propriétaire.")
+            return
+        #Si id client correct et date de création de compte correcte
+        sql = f"""INSERT INTO Appartenir VALUES({id}, 'TO_DATE("{date_creation}", "YYYY-MM-DD")')"""
+        try:
+            curseur.execute(sql)
+            curseur.commit()
+        except psycopg2.IntegrityError:
+            print("Le client est déjà propriétaire de ce compte !")
+            curseur.rollback()
+        except psycopg2.errors.UniqueViolation:
+            print("Violation d'une contrainte d'unicité. Annulation de la création d'appartenance.")
+            curseur.rollback()
+        except psycopg2.errors.ForeignKeyViolation:
+            print("Violation d'une contrainte de clé étrangère. Annulation de la création d'appartenance. ")
+        except:
+            print("La création de la relation d'appartenance a échoué.")
+            curseur.rollback()
+        else:
+            print("Ajout de la relation d'appartenance client-compte.")

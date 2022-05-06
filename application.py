@@ -26,7 +26,7 @@ def main():
                 print("Veuillez entrer un numéro correct.")
                 reponse = int(input("Votre choix : "))
             if repInsertion == 1:
-                #insererClient(cur)
+                insererClient(cur)
             elif repInsertion == 2:
                 afficheMenuInsertionCompte()
                 repInsertionCompte = -1
@@ -38,7 +38,7 @@ def main():
                 elif repInsertionCompte == 2:
                     insererCompteRevolving(cur)
                 elif repInsertionCompte == 3:
-                    #insererCompteEpargne(cur)
+                    insererCompteEpargne(cur)
             else:
                 insererOperation(cur)
         #Si l'utilisateur choisit l'option de modification
