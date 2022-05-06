@@ -22,3 +22,20 @@ def afficheMenuInsertionCompte():
     """Fonction qui affiche le menu d'insertion de comptes"""
     print("*** Insertion d'un compte ***")
     print("""1. Ajout d'un compte courant\n2. Ajout d'un compte revolving\n3. Ajout d'un compte épargne""")
+
+
+def afficherTable(cur, table, limite):
+    sql = f"SELECT * FROM {table} LIMIT {limite}"
+    cur.execute(sql)
+    res = cur.fetchall()
+    col_names = [attribut[0] for attribut in cur.description]
+    string_col = f"{'X':5}"
+    for att in col_names:
+        string_col += f"{att:30s}"
+    print(string_col)
+    for i, raw  in enumerate(res):
+        string_att = f"{i+1:5}"
+        for att in raw:
+            string_att += f"{att:30s}"
+        print(string_att)
+
