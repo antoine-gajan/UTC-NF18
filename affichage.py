@@ -10,8 +10,8 @@ def afficheMenuInsertion():
 
 def afficheMenuModification():
     """Fonction qui affiche le menu de modification de donnees"""
-    print("*** Suppression de donnees ***")
-    print("""1. Suppresion d'un client\n2. Suppresion d'un compte""")
+    print("*** Modification de donnees ***")
+    print("""1. Modification d'un client\n2. Modification d'un compte""")
 
 def afficheMenuSuppression():
     """Fonction qui affiche le menu de suppressionde donnees"""
