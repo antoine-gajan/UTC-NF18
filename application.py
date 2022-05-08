@@ -1,6 +1,7 @@
 from insertion import *
 from connexion import *
 from affichage import *
+from suppression import *
 
 
 def main():
@@ -12,79 +13,87 @@ def main():
     while continuer:
         afficheMenuPrincipal()
         #Demande du choix de l'utilisateur
-        reponse = -1
-        #Tant que la réponse n'est pas valide
+        reponse = int(input("Votre choix : "))
+        #Tant que la reponse n'est pas valide
         while reponse < 1 or reponse > 7:
-            print("Veuillez entrer un numéro correct.")
+            print("Veuillez entrer un numero correct.")
             reponse = int(input("Votre choix : "))
 
         #Si l'utilisateur choisit l'option d'ajout
         if reponse == 1:
             afficheMenuInsertion()
-            repInsertion = -1
+            repInsertion = int(input("Votre choix : "))
             while repInsertion < 1 or repInsertion > 3:
-                print("Veuillez entrer un numéro correct.")
-                reponse = int(input("Votre choix : "))
+                print("Veuillez entrer un numero correct.")
+                repInsertion = int(input("Votre choix : "))
             if repInsertion == 1:
-                insererClient(cur)
+                insererClient(conn, cur)
             elif repInsertion == 2:
                 afficheMenuInsertionCompte()
-                repInsertionCompte = -1
+                repInsertionCompte = int(input("Votre choix : "))
                 while repInsertionCompte < 1 or repInsertionCompte > 3:
-                    print("Veuillez entrer un numéro correct.")
-                    reponse = int(input("Votre choix : "))
+                    print("Veuillez entrer un numero correct.")
+                    repInsertionCompte = int(input("Votre choix : "))
                 if repInsertionCompte == 1:
-                    insererCompteCourant(cur)
+                    insererCompteCourant(conn, cur)
                 elif repInsertionCompte == 2:
-                    insererCompteRevolving(cur)
+                    insererCompteRevolving(conn, cur)
                 elif repInsertionCompte == 3:
-                    insererCompteEpargne(cur)
+                    insererCompteEpargne(conn, cur)
             else:
-                insererOperation(cur)
+                insererOperation(conn, cur)
         #Si l'utilisateur choisit l'option de modification
         elif reponse == 2:
             afficheMenuModification()
         #Si l'utilisateur choisit l'option de suppression
         elif reponse == 3:
             afficheMenuSuppression()
-            repSuppresion = -1
+            repSuppresion = int(input("Votre choix : "))
             while repSuppresion < 1 or repSuppresion > 2:
-                print("Veuillez entrer un numéro correct.")
+                print("Veuillez entrer un numero correct.")
                 repSuppresion = int(input("Votre choix : "))
             if repSuppresion == 1:
                 print("*** Suppression d'un client")
-                supprimerClient(cur)
+                supprimerClient(conn, cur)
             elif repSuppresion == 2:
                 print("*** Suppression d'un compte ***")
-                supprimerCompte(cur)
+                supprimerCompte(conn, cur)
         # Affichage de la BDD
         elif reponse == 4:
+            dico_tables = {"1" : "Client", "2" : "Compte", "3" : "Appartenir", "4" : "Operation", "5" : "MinMaxMois"}
+            afficherMenuAffichage()
+            repAffiche = input("Entrez le numero correspondant à une table : ")
+            while (repAffiche not in [str(num) for num in range(1,6)]):
+                repAffiche = input("Numero invalide. Veuillez entrer un numero de table valide : ")
+            nb_resultats = int(input("Nombre de résultats souhaités : "))
+            while nb_resultats < 0:
+                nb_resultats = int(input("Nombre de résultats souhaités : "))
+            afficherTable(cur, dico_tables[repAffiche], nb_resultats)
         elif reponse == 5:
             print("*** Solde d'un compte ***")
-            date_creation = input("Date de création du compte (YYYY-MM-DD) : ")
+            date_creation = input("Date de creation du compte (YYYY-MM-DD) : ")
             #Montant d'un compte
             solde = getSoldeCompte(cur, date_creation)
-            if len(solde) == 0:
+            if solde is None:
                 #Compte inexistant
-                print("Aucun compte créé à cette date.")
+                print("Aucun compte cree à cette date.")
             else:
-                print(f"Le solde du compte est de : {solde[0][0]}")
-        #Si l'utilisateur veut savoir le nombre d'opération faite sur un compte
+                print(f"Le solde du compte est de : {solde}")
+        #Si l'utilisateur veut savoir le nombre d'operation faite sur un compte
         elif reponse == 6:
-            print("*** Nombre des chèques émis par un client ***")
-            numero = input("Numéro de téléphone du client : ")
+            print("*** Nombre des cheques emis par un client ***")
+            numero = input("Numero de telephone du client : ")
             nombreChequeEmis = getNbCheque(cur, numero, "E")
-            #Si le numéro de téléphone ne correspond à aucun numéro de la BDD
-            if len(nombreChequeEmis) == 0:
-                print("Aucun compte avec ce numéro de téléphone")
+            #Si le numero de telephone ne correspond à aucun numero de la BDD
+            if nombreChequeEmis is None:
+                print("Aucun compte avec ce numero de telephone")
             else:
-                print(f"Le nombre de chèques émis par ce client est de : {nombreChequeEmis[0][0]}")
+                print(f"Le nombre de cheques emis par ce client est de : {nombreChequeEmis}")
         #Si l'utilisateur souhaite quitter le programme
-        if reponse == 7:
+        elif reponse == 7:
             print("Vous allez quitter le programme.")
             continuer = False
             close(conn)
-
 
 
 if __name__ == "__main__":
