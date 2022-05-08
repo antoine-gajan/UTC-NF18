@@ -157,6 +157,7 @@ def insererCompteEpargne(connexion, curseur):
 def insererOperation(connexion, curseur):
     """Fonction qui permet d'inserer une operation dans la BDD"""
     print("*** Effectuer une operation ***")
+    aujourdhui = f"{date.today().year}-{date.today().month:02}-{date.today().day:02}"
     clients = getClients(curseur)
     #Test du nombre de clients
     if len(clients) == 0:
@@ -222,15 +223,15 @@ def insererOperation(connexion, curseur):
                     etat = "traite"
                     if type == "2":
                         #Ajout de l'operation
-                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_ , '{etat}', 'Cheque', 'depot')"
+                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', '{aujourdhui}', '{etat}', 'Cheque', 'depot')"
                         #Modification du solde
-                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation)[0][0] + montant}' WHERE date_creation = '{date_creation}')"
+                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
 
                     else:
                         #Ajout de l'operation
-                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', CURRENT_ , '{etat}', '{typeOpe[type]}', NULL)"
+                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', '{aujourdhui}' , '{etat}', '{typeOpe[type]}', NULL)"
                         #Modification du solde
-                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation)[0][0] + montant}' WHERE date_creation = '{date_creation}')"
+                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
                     #Ajout des reqûetes à la BDD
                     try:
                         curseur.execute(sql1)
@@ -249,13 +250,13 @@ def insererOperation(connexion, curseur):
                     etat = "traite"
                     #Si le montant est negatif, c'est un debit
                     if type == "2" and montant < 0:
-                        sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, CURRENT_ , '{etat}', '{typeOpe[type]}', 'depot')"
+                        sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, '{aujourdhui}', '{etat}', '{typeOpe[type]}', 'depot')"
                     elif type == "2":
-                        sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, CURRENT_ , '{etat}', '{typeOpe[type]}', 'emission')"
+                        sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, '{aujourdhui}' , '{etat}', '{typeOpe[type]}', 'emission')"
                     else:
-                        sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, CURRENT_ , '{etat}', '{typeOpe[type]}', NULL)"
+                        sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, '{aujourdhui}' , '{etat}', '{typeOpe[type]}', NULL)"
                     #Modification du solde du compte
-                    sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation)[0][0] + montant}' WHERE date_creation = '{date_creation}')"
+                    sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
                     # Ajout dans la BDD
                     try:
                         curseur.execute(sql1)

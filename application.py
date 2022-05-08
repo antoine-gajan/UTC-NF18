@@ -2,6 +2,7 @@ from insertion import *
 from connexion import *
 from affichage import *
 from suppression import *
+from time import sleep
 
 
 def main():
@@ -28,6 +29,7 @@ def main():
                 repInsertion = int(input("Votre choix : "))
             if repInsertion == 1:
                 insererClient(conn, cur)
+                sleep(2)
             elif repInsertion == 2:
                 afficheMenuInsertionCompte()
                 repInsertionCompte = int(input("Votre choix : "))
@@ -36,15 +38,24 @@ def main():
                     repInsertionCompte = int(input("Votre choix : "))
                 if repInsertionCompte == 1:
                     insererCompteCourant(conn, cur)
+                    sleep(2)
                 elif repInsertionCompte == 2:
                     insererCompteRevolving(conn, cur)
+                    sleep(2)
                 elif repInsertionCompte == 3:
                     insererCompteEpargne(conn, cur)
+                    sleep(2)
             else:
                 insererOperation(conn, cur)
+                sleep(2)
         #Si l'utilisateur choisit l'option de modification
         elif reponse == 2:
             afficheMenuModification()
+            repModification = int(input("Votre choix : "))
+            while repModification < 1 or repModification > 2:
+                print("Veuillez entrer un numero correct.")
+                repSuppresion = int(input("Votre choix : "))
+
         #Si l'utilisateur choisit l'option de suppression
         elif reponse == 3:
             afficheMenuSuppression()
@@ -55,9 +66,11 @@ def main():
             if repSuppresion == 1:
                 print("*** Suppression d'un client")
                 supprimerClient(conn, cur)
+                sleep(2)
             elif repSuppresion == 2:
                 print("*** Suppression d'un compte ***")
                 supprimerCompte(conn, cur)
+                sleep(2)
         # Affichage de la BDD
         elif reponse == 4:
             dico_tables = {"1" : "Client", "2" : "Compte", "3" : "Appartenir", "4" : "Operation", "5" : "MinMaxMois"}
@@ -69,6 +82,7 @@ def main():
             while nb_resultats < 0:
                 nb_resultats = int(input("Nombre de résultats souhaités : "))
             afficherTable(cur, dico_tables[repAffiche], nb_resultats)
+            sleep(2)
         elif reponse == 5:
             print("*** Solde d'un compte ***")
             date_creation = input("Date de creation du compte (YYYY-MM-DD) : ")
@@ -79,6 +93,7 @@ def main():
                 print("Aucun compte cree à cette date.")
             else:
                 print(f"Le solde du compte est de : {solde}")
+            sleep(2)
         #Si l'utilisateur veut savoir le nombre d'operation faite sur un compte
         elif reponse == 6:
             print("*** Nombre des cheques emis par un client ***")
@@ -89,12 +104,13 @@ def main():
                 print("Aucun compte avec ce numero de telephone")
             else:
                 print(f"Le nombre de cheques emis par ce client est de : {nombreChequeEmis}")
+            sleep(2)
         #Si l'utilisateur souhaite quitter le programme
         elif reponse == 7:
             print("Vous allez quitter le programme.")
             continuer = False
             close(conn)
-
+            sleep(2)
 
 if __name__ == "__main__":
     main()
