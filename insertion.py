@@ -210,7 +210,7 @@ def insererOperation(connexion, curseur):
                     print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte revolving en dessous du minimum autorisé.\nAnnulation de l'opération.")
                     return
                 if (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation) + montant < -GetDecouvert(curseur, date_creation)) :
-                    print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte courant en dessus du decouvert autorisé.\nAnnulation de l'opération.")
+                    print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte courant en dessous du decouvert autorisé.\nAnnulation de l'opération.")
                     return
                 if (Typecompte(curseur, date_creation) == 'epargne' and typeOpe[type] not in ['Guichet', 'Virement']):
                     print("Les comptes épargnes ne peuvent faires que des opérations guichet et virement.\nAnnulation de l'opération.")
@@ -257,10 +257,19 @@ def insererOperation(connexion, curseur):
                         sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, '{aujourdhui}' , '{etat}', '{typeOpe[type]}', NULL)"
                     #Modification du solde du compte
                     sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
+
+                    sql3 = ""
+                    if (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation) > 0 and getSoldeCompte(curseur, date_creation) + montant < 0):
+                        sql3 = f"UPDATE CompteCourant SET date_decouvert = {aujourdhui} WHERE compte = '{date_creation}')"
+                    elif (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation) < 0 and getSoldeCompte(curseur, date_creation) + montant > 0):
+                        sql3 = f"UPDATE CompteCourant SET date_decouvert = NULL WHERE compte = '{date_creation}')"
+
                     # Ajout dans la BDD
                     try:
                         curseur.execute(sql1)
                         curseur.execute(sql2)
+                        if sql3 != "":
+                            curseur.execute(sql3)
                         connexion.commit()
                         #Mise à jour de la table MinMaxMois
                         UpdateMinMaxMois(curseur, date_creation)
@@ -275,6 +284,7 @@ def insererOperation(connexion, curseur):
         #Message d'erreur, client inconnu
         else:
             print("Cet utilisateur n'est pas un client. Abandon de l'opération.")
+            
 
 def insererAppartenir(connexion, curseur):
     """Fonction qui rajoute un client comme propriétaire d'un compte"""
