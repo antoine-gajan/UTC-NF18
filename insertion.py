@@ -92,7 +92,7 @@ def insererCompteRevolving(connexion, curseur):
     solde = int(input("Solde du compte : "))
     #Statut du compte
     statut = {"1":"ouvert", "2":"bloque","3":"ferme"}
-    s = int(input("Statut du compte (1 : ouvert, 2 : bloqué, 3 : fermé) : "))
+    s = input("Statut du compte (1 : ouvert, 2 : bloqué, 3 : fermé) : ")
     while s not in ["1", "2", "3"]:
         s = input("Statut incorrect.\nStatut du compte (1 : ouvert, 2 : bloqué, 3 : fermé) : ")
     #Gestion du taux d'interet
@@ -131,7 +131,7 @@ def insererCompteEpargne(connexion, curseur):
         solde = int(input("Le solde doit être supérieur à 300€.\nSolde du compte : "))
     #Statut du compte
     statut = {"1":"ouvert", "2":"bloque", "3":"ferme"}
-    s = int(input("Statut du compte (1 : ouvert, 2 : bloqué, 3 : fermé) : "))
+    s = input("Statut du compte (1 : ouvert, 2 : bloqué, 3 : fermé) : ")
     while s not in ["1", "2", "3"]:
         s = input("Statut incorrect.\nStatut du compte (1 : ouvert, 2 : bloqué, 3 : fermé) : ")
     #Requête SQL
