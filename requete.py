@@ -81,6 +81,16 @@ def getMontantOperation(curseur, numero, date):
         return None
     return montant[0][0]
 
+def getHistoriquetOperation(curseur, numero, date1, date2):
+    """Fonction qui retourne les montant des operation effectuées entre deux dates données a partir du numero de client """
+    sql = f"SELECT Operation.montant, Operation.type_operation, Operation.date FROM Operation INNER JOIN Client ON Operation.client = Client.id WHERE Client.telephone = '{numero}' AND Operation.date >= '{date1}' AND Operation.date <= '{date2}'"
+    curseur.execute(sql)
+    montant = curseur.fetchall()
+    if len(montant) == 0:
+        print("Pas d'opération effectuée pour ce client à ces dates.")
+    for i in range(0,len(montant)):
+        print(f"Montant : {montant[i][0]}     Type d'opération : {montant[i][1]}     Date : {montant[i][2]}")
+
 
 def getSommeTotale(curseur, telephone, type_operation):
     """Fonction qui retourne la somme totale effectuee par un client identifie par son telephone"""
@@ -162,3 +172,29 @@ def UpdateMinMaxMois(conn, curseur, date_creation):
             except:
                 conn.rollback()
                 print("Echec lors de la mise à jour de la table MinMaxMois.")
+
+
+def UpdateStatutCompte(conn, curseur, date_creation, statut):
+    """Fonction qui met à jour le statut d'un compte"""
+    
+    sql = f"UPDATE Compte SET statut= {statut} WHERE date_creation = '{date_creation}'"
+    try:
+        curseur.execute(sql)
+        conn.commit()
+    except:
+        conn.rollback()
+        print("Echec lors de la mise à jour du statut du Compte.")
+        
+
+
+def UpdateEtatOperation(conn, curseur, date, statut):
+    """Fonction qui met à jour l'état d'une opération d'une donnée effectué par compte donné """
+    
+    sql = f"UPDATE Operation SET etat= {etat} WHERE date = '{date}' AND compte = '{date_creation}'"
+    try:
+        curseur.execute(sql)
+        conn.commit()
+    except:
+        conn.rollback()
+        print("Echec lors de la mise à jour de l'état de l'Opération.")
+    
