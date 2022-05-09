@@ -19,7 +19,7 @@ def getAllComptes(curseur):
 
 def getComptesUtilisateur(curseur, id):
     """Fonction qui renvoie l'ensemble des comptes d'un utilisateur"""
-    sql = f"SELECT date_creation, statut, solde FROM Compte C INNER JOIN Appartenir A ON A.client = C.id WHERE C.id = {id}"
+    sql = f"SELECT date_creation, statut, solde FROM Compte C INNER JOIN Appartenir A ON A.compte = C.date_creation WHERE A.client = {id}"
     curseur.execute(sql)
     comptes = curseur.fetchall()
     return comptes
@@ -42,13 +42,14 @@ def getInfosCompte(curseur, date_creation):
     compte = curseur.fetchall()
     if len(compte) == 0:
         return None
-    return compte[0][0]
+    return compte
 
 
 def getNbCheque(curseur, numero, typecheque):
     """Fonction qui retourne le nombre de cheque émis ou depose par un client identifié par son num de tel"""
+    type = {"E": "emission", "D": "depose"}
     if typecheque == "D" or typecheque == "E":
-        sql = f"SELECT COUNT(*) FROM Operation INNER JOIN Client ON Operation.client = Client.id WHERE Client.telephone = '{numero}' AND Operation.type_operation = 'Cheque' AND Operation.type_cheque = '{typecheque}'"
+        sql = f"SELECT COUNT(*) FROM Operation INNER JOIN Client ON Operation.client = Client.id WHERE Client.telephone = '{numero}' AND Operation.type_operation = 'Cheque' AND Operation.type_cheque = '{type[typecheque]}'"
     else:
         sql = f"SELECT COUNT(*) FROM Operation INNER JOIN Client ON Operation.client = 	Client.id WHERE Client.telephone = '{numero}' AND Operation.type_operation = 'Cheque'"
 
@@ -62,7 +63,8 @@ def getNbCheque(curseur, numero, typecheque):
 def getNbOperation(curseur, numero, type_operation):
     """Fonction qui rentourne le nombre d'operation effectuee par un client identifie par son num de tel pour un type d'operation donne"""
     if type_operation == "Cheque":
-        typecheque = input('nombre de cheque emis (E), depose (D) ou les deux(A) ?')
+        typecheque = input('nombre de cheque emis (E), depose (D) ou les deux (A) ?')
+        type = {"E" : "emission", "D" : "depose"}
         getNbCheque(curseur, numero, typecheque)
     sql = f"SELECT COUNT(*) FROM Operation INNER JOIN Client ON Operation.client = Client.id WHERE Client.telephone = '{numero}' AND Operation.type_operation = '{type_operation}'"
     curseur.execute(sql)
@@ -81,18 +83,19 @@ def getMontantOperation(curseur, numero, date):
         return None
     return montant[0][0]
 
-def getHistoriquetOperation(curseur, numero, date1, date2):
+
+def getHistoriqueOperation(curseur, numero, date1, date2):
     """Fonction qui retourne les montant des operation effectuées entre deux dates données a partir du numero de client """
     sql = f"SELECT Operation.montant, Operation.type_operation, Operation.date FROM Operation INNER JOIN Client ON Operation.client = Client.id WHERE Client.telephone = '{numero}' AND Operation.date >= '{date1}' AND Operation.date <= '{date2}'"
     curseur.execute(sql)
     montant = curseur.fetchall()
     if len(montant) == 0:
-        print("Pas d'opération effectuée pour ce client à ces dates.")
-    for i in range(0,len(montant)):
-        print(f"Montant : {montant[i][0]}     Type d'opération : {montant[i][1]}     Date : {montant[i][2]}")
+        print("Pas d'opération effectuée pour ce client sur cette période.")
+    for ligne in montant:
+        print(f"Montant : {ligne[0]}     Type d'opération : {ligne[1]}     Date : {ligne[2]}")
 
 
-def getSommeTotale(curseur, telephone, type_operation):
+def getSommeTotale(curseur, telephone):
     """Fonction qui retourne la somme totale effectuee par un client identifie par son telephone"""
     sql = f"SELECT SUM(ABS(Operation.montant)) FROM Operation INNER JOIN Client ON Operation.client = Client.id WHERE Client.telephone = '{telephone}'"
     curseur.execute(sql)
@@ -120,7 +123,7 @@ def Typecompte(curseur, date_creation):
 
 def GetMin(curseur, date_creation):
     """Fonction qui rentourne le min autorse d'un compte revolving"""
-    sql = f"SELECT montant_min FROM CompteRevolving WHERE date_creation = '{date_creation}'"
+    sql = f"SELECT montant_min FROM CompteRevolving WHERE compte = '{date_creation}'"
     curseur.execute(sql)
     compte = curseur.fetchall()
     if len(compte) == 0:
@@ -129,8 +132,8 @@ def GetMin(curseur, date_creation):
 
 
 def GetDecouvert(curseur, date_creation):
-    """Fonction qui rentourne le decouvert autorse d'un compte courant"""
-    sql = f"SELECT decouvert_autorise FROM CompteCourant WHERE date_creation = '{date_creation}'"
+    """Fonction qui rentourne le decouvert autorise d'un compte courant"""
+    sql = f"SELECT decouvert_autorise FROM CompteCourant WHERE compte = '{date_creation}'"
     curseur.execute(sql)
     compte = curseur.fetchall()
     if len(compte) == 0:
@@ -145,7 +148,7 @@ def UpdateMinMaxMois(conn, curseur, date_creation):
     MinMax = curseur.fetchall()
 
     # Pas d'instance pour ce mois ci, on la cree
-    if (len(MinMax) == 0):
+    if len(MinMax) == 0:
         sql = f"INSERT INTO MinMaxMois (annee, min, max, mois, compte) VALUES ({date.today().year}, {getSoldeCompte(curseur, date_creation)}, {getSoldeCompte(curseur, date_creation)}, {date.today().month}, {date_creation})"
         try:
             curseur.execute(sql)
@@ -155,7 +158,7 @@ def UpdateMinMaxMois(conn, curseur, date_creation):
             print("Echec lors de la mise à jour de la table MinMaxMois.")
     # Dejà une instance pour ce mois ci, on la met a jour si necessaire
     else:
-        if (getSoldeCompte(curseur, date_creation) > MinMax[2]):
+        if getSoldeCompte(curseur, date_creation) > MinMax[2]:
             sql = f"UPDATE MinMaxMois SET max = {getSoldeCompte(curseur, date_creation)} WHERE compte = '{date_creation}' AND annee = {date.today().year} AND mois = {date.today().month}"
             try:
                 curseur.execute(sql)
@@ -164,7 +167,7 @@ def UpdateMinMaxMois(conn, curseur, date_creation):
                 conn.rollback()
                 print("Echec lors de la mise à jour de la table MinMaxMois.")
 
-        if (getSoldeCompte(curseur, date_creation)[0][0] < MinMax[1]):
+        if getSoldeCompte(curseur, date_creation)[0][0] < MinMax[1]:
             sql = f"UPDATE MinMaxMois SET min = {getSoldeCompte(curseur, date_creation)} WHERE compte = '{date_creation}' AND annee = {date.today().year} AND mois = {date.today().month}"
             try:
                 curseur.execute(sql)
@@ -176,7 +179,7 @@ def UpdateMinMaxMois(conn, curseur, date_creation):
 
 def UpdateStatutCompte(conn, curseur, date_creation, statut):
     """Fonction qui met à jour le statut d'un compte"""
-    
+
     sql = f"UPDATE Compte SET statut= {statut} WHERE date_creation = '{date_creation}'"
     try:
         curseur.execute(sql)
@@ -184,12 +187,11 @@ def UpdateStatutCompte(conn, curseur, date_creation, statut):
     except:
         conn.rollback()
         print("Echec lors de la mise à jour du statut du Compte.")
-        
 
 
-def UpdateEtatOperation(conn, curseur, date, statut):
+def UpdateEtatOperation(conn, curseur, date_creation, etat):
     """Fonction qui met à jour l'état d'une opération d'une donnée effectué par compte donné """
-    
+
     sql = f"UPDATE Operation SET etat= {etat} WHERE date = '{date}' AND compte = '{date_creation}'"
     try:
         curseur.execute(sql)
@@ -197,4 +199,3 @@ def UpdateEtatOperation(conn, curseur, date, statut):
     except:
         conn.rollback()
         print("Echec lors de la mise à jour de l'état de l'Opération.")
-    

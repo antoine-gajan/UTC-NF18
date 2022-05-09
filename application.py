@@ -16,7 +16,7 @@ def main():
         #Demande du choix de l'utilisateur
         reponse = int(input("Votre choix : "))
         #Tant que la reponse n'est pas valide
-        while reponse < 1 or reponse > 7:
+        while reponse < 1 or reponse > 9:
             print("Veuillez entrer un numero correct.")
             reponse = int(input("Votre choix : "))
 
@@ -33,7 +33,7 @@ def main():
             elif repInsertion == 2:
                 afficheMenuInsertionCompte()
                 repInsertionCompte = int(input("Votre choix : "))
-                while repInsertionCompte < 1 or repInsertionCompte > 3:
+                while repInsertionCompte < 1 or repInsertionCompte > 4:
                     print("Veuillez entrer un numero correct.")
                     repInsertionCompte = int(input("Votre choix : "))
                 if repInsertionCompte == 1:
@@ -45,6 +45,9 @@ def main():
                 elif repInsertionCompte == 3:
                     insererCompteEpargne(conn, cur)
                     sleep(2)
+            elif repInsertion == 3:
+                insererAppartenir(conn, cur)
+                sleep(2)
             else:
                 insererOperation(conn, cur)
                 sleep(2)
@@ -54,22 +57,28 @@ def main():
             repModification = int(input("Votre choix : "))
             while repModification < 1 or repModification > 2:
                 print("Veuillez entrer un numero correct.")
-                repSuppresion = int(input("Votre choix : "))
+                repModification = int(input("Votre choix : "))
+            if repModification == 1:
+                UpdateClient(conn, cur)
+            else:
+                UpdateCompte(conn, cur)
+
 
         #Si l'utilisateur choisit l'option de suppression
         elif reponse == 3:
             afficheMenuSuppression()
             repSuppresion = int(input("Votre choix : "))
-            while repSuppresion < 1 or repSuppresion > 2:
+            while repSuppresion < 1 or repSuppresion > 3:
                 print("Veuillez entrer un numero correct.")
                 repSuppresion = int(input("Votre choix : "))
             if repSuppresion == 1:
-                print("*** Suppression d'un client")
                 supprimerClient(conn, cur)
                 sleep(2)
             elif repSuppresion == 2:
-                print("*** Suppression d'un compte ***")
                 supprimerCompte(conn, cur)
+                sleep(2)
+            else:
+                supprimeAppartenance(conn, cur)
                 sleep(2)
         # Affichage de la BDD
         elif reponse == 4:
@@ -105,8 +114,25 @@ def main():
             else:
                 print(f"Le nombre de cheques emis par ce client est de : {nombreChequeEmis}")
             sleep(2)
-        #Si l'utilisateur souhaite quitter le programme
+        #Historique des opérations
         elif reponse == 7:
+            print("*** Historique des opérations effectuées par un client ***")
+            numero = input("Numéro de téléphone du client : ")
+            date1 = input("Date de début de période (YYYY-MM-DD) : ")
+            date2 = input("Date de fin de période (YYYY-MM-DD) : ")
+            getHistoriqueOperation(cur, numero, date1, date2)
+            sleep(2)
+        elif reponse == 8:
+            print("*** Somme des montants des opérations effectuées par un client ***")
+            numero = input("Numéro de téléphone du client : ")
+            total = getSommeTotale(cur, numero)
+            if total is None:
+                print("Le client n'a jamais effectué d'opérations.")
+            else:
+                print(f"Le client a effectué des opérations pour un montant total de {total} €.")
+            sleep(2)
+        #Si l'utilisateur souhaite quitter le programme
+        else:
             print("Vous allez quitter le programme.")
             continuer = False
             close(conn)

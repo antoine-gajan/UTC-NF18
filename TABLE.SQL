@@ -59,7 +59,5 @@ date date,
 etat  Etat NOT NULL,
 type_operation TypeOperation NOT NULL,
 type_cheque TypeCheque,
-PRIMARY KEY (compte, date)
+PRIMARY KEY (compte, client, date)
 );
-
-

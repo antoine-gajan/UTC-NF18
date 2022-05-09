@@ -166,7 +166,7 @@ def insererOperation(connexion, curseur):
         #Affichage de la liste des clients
         print("Liste des clients (ID, nom) : ")
         for client in clients:
-            print(f"{client[0]}\t{client[1]}")
+            print(f"{client[0]:8d}\t{client[1]}")
         #Demande de l'id du client
         id = int(input("ID de l'utilisateur : "))
         if id in [client[0] for client in clients]:
@@ -177,7 +177,7 @@ def insererOperation(connexion, curseur):
                 print(f"{compte[0]}\t{compte[1]}\t{compte[2]}")
             #Demande du compte
             date_creation = input("Date de création du compte où effectuer l'opération : ")
-            if date_creation in [compte[0] for compte in comptesUtilisateur]:
+            if date_creation in [f"{compte[0]}" for compte in comptesUtilisateur]:
                 #Verification du statut du compte
                 statut = getInfosCompte(curseur, date_creation)[0][1]
                 #Si compte ferme, aucune operation possible
@@ -210,7 +210,7 @@ def insererOperation(connexion, curseur):
                     print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte revolving en dessous du minimum autorisé.\nAnnulation de l'opération.")
                     return
                 if (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation) + montant < -GetDecouvert(curseur, date_creation)) :
-                    print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte courant en dessous du decouvert autorisé.\nAnnulation de l'opération.")
+                    print("Impossible d'effectuer l'opération. Il ne peut pas y avoir de compte courant en dessus du decouvert autorisé.\nAnnulation de l'opération.")
                     return
                 if (Typecompte(curseur, date_creation) == 'epargne' and typeOpe[type] not in ['Guichet', 'Virement']):
                     print("Les comptes épargnes ne peuvent faires que des opérations guichet et virement.\nAnnulation de l'opération.")
@@ -229,17 +229,16 @@ def insererOperation(connexion, curseur):
 
                     else:
                         #Ajout de l'operation
-                        sql1 = f"INSERT INTO Operation VALUES('{id}', '{date_creation}', '{montant}', '{aujourdhui}' , '{etat}', '{typeOpe[type]}', NULL)"
+                        sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, '{aujourdhui}' , '{etat}', '{typeOpe[type]}', NULL)"
                         #Modification du solde
-                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
+                        sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}'"
                     #Ajout des reqûetes à la BDD
                     try:
                         curseur.execute(sql1)
                         curseur.execute(sql2)
                         connexion.commit()
                         #Mise à jour de la table MinMaxMois
-                        UpdateMinMaxMois(curseur, date_creation)
-
+                        UpdateMinMaxMois(connexion, curseur, date_creation)
                     except:
                         print("L'ajout de l'opération a échoué.")
                         connexion.rollback()
@@ -256,20 +255,11 @@ def insererOperation(connexion, curseur):
                     else:
                         sql1 = f"INSERT INTO Operation VALUES({id}, '{date_creation}', {montant}, '{aujourdhui}' , '{etat}', '{typeOpe[type]}', NULL)"
                     #Modification du solde du compte
-                    sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}')"
-
-                    sql3 = ""
-                    if (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation) > 0 and getSoldeCompte(curseur, date_creation) + montant < 0):
-                        sql3 = f"UPDATE CompteCourant SET date_decouvert = {aujourdhui} WHERE compte = '{date_creation}')"
-                    elif (Typecompte(curseur, date_creation) == 'courant' and getSoldeCompte(curseur, date_creation) < 0 and getSoldeCompte(curseur, date_creation) + montant > 0):
-                        sql3 = f"UPDATE CompteCourant SET date_decouvert = NULL WHERE compte = '{date_creation}')"
-
+                    sql2 = f"UPDATE Compte SET solde = '{getSoldeCompte(curseur, date_creation) + montant}' WHERE date_creation = '{date_creation}'"
                     # Ajout dans la BDD
                     try:
                         curseur.execute(sql1)
                         curseur.execute(sql2)
-                        if sql3 != "":
-                            curseur.execute(sql3)
                         connexion.commit()
                         #Mise à jour de la table MinMaxMois
                         UpdateMinMaxMois(curseur, date_creation)
@@ -284,7 +274,6 @@ def insererOperation(connexion, curseur):
         #Message d'erreur, client inconnu
         else:
             print("Cet utilisateur n'est pas un client. Abandon de l'opération.")
-            
 
 def insererAppartenir(connexion, curseur):
     """Fonction qui rajoute un client comme propriétaire d'un compte"""
@@ -312,7 +301,7 @@ def insererAppartenir(connexion, curseur):
         for compte in comptes:
             print(f"{compte[0]}\t{compte[1]}\t{compte[2]}")
         date_creation = input("Date de creation du compte où vous voulez être proprietaire (YYYY-MM-DD) : ")
-        if date_creation not in [compte[0] for compte in comptes]:
+        if date_creation not in [f"{compte[0]}" for compte in comptes]:
             print("Ce compte n'existe pas. Abandon de l'ajout de propriétaire.")
             return
         #Si id client correct et date de creation de compte correcte
@@ -328,6 +317,7 @@ def insererAppartenir(connexion, curseur):
             connexion.rollback()
         except psycopg2.errors.ForeignKeyViolation:
             print("Violation d'une contrainte de clé étrangère. Annulation de la création d'appartenance. ")
+            connexion.rollback()
         except:
             print("La création de la relation d'appartenance a échoué.")
             connexion.rollback()
