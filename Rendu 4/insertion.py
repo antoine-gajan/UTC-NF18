@@ -21,7 +21,7 @@ def insererClient(connexion, curseur):
         connexion.rollback()
     except:
         print("Erreur rencontrée. Impossible de créer le compte client.")
-
+        connexion.rollback()
     else:
         print("Création du compte client realise avec succès.")
 
@@ -317,7 +317,6 @@ def insererAppartenir(connexion, curseur):
             connexion.rollback()
         except psycopg2.errors.ForeignKeyViolation:
             print("Violation d'une contrainte de clé étrangère. Annulation de la création d'appartenance. ")
-            connexion.rollback()
         except:
             print("La création de la relation d'appartenance a échoué.")
             connexion.rollback()
