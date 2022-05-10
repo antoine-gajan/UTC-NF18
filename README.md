@@ -41,7 +41,7 @@ DATABASE = "banque"
 
 Enfin, vous pourrez lancer l'application ;)
 
-
-Réalisé par BOUZAR Massil - DUBUS Théo - FABRE Esther - GAJAN Antoine
-Semestre P22
+---------------------------------------------------------------------
+<b>Projet réalisé par BOUZAR Massil - DUBUS Théo - FABRE Esther - GAJAN Antoine <br>
+Semestre P22</b>
 
