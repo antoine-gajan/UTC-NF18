@@ -6,6 +6,7 @@ Ce projet nous a permis de concevoir une application utilisant une base de donn√
 ## Cloner le repository
 ```
 mkdir dossier
+git init
 git clone https://gitlab.utc.fr/nf18-projet-gestion-de-comptes-bancaires/nf18-projet-gestion-de-comptes-bancaires.git
 ```
 
