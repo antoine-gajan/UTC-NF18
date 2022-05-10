@@ -5,8 +5,8 @@ def connexion():
     """Fonction permettant de se connecter à la BDD"""
     #Identifiant de connexion
     HOST = "localhost"
-    USER = "postgres"
-    PASSWORD = "Esvfjfpk060303"
+    USER = "YOUR_USERNAME"
+    PASSWORD = "YOUR_PASSWORD"
     DATABASE = "banque"
 
     #Ouverture de la connexion
