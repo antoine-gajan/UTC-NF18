@@ -31,7 +31,7 @@ En cas de problèmes de droits, il est également possible de copier/coller le c
 
 ## Lancer l'application
 
-Avant de lancer l'application, il faut modifier dans le fichier Rendu 4/connexion.py les informations de connexion. Remplacer les informations de connexion avec les votres.
+Avant de lancer l'application, il faut modifier dans le fichier Partie 1/Rendu 4/connexion.py les informations de connexion. Remplacer les informations de connexion avec les votres.
 
 ```
 HOST = "localhost"
