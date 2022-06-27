@@ -7,7 +7,7 @@ Ce projet nous a permis de concevoir une application utilisant une base de donn√
 ```
 mkdir dossier
 git init
-git clone https://gitlab.utc.fr/nf18-projet-gestion-de-comptes-bancaires/nf18-projet-gestion-de-comptes-bancaires.git
+git clone https://github.com/antoine-gajan/UTC-NF18.git
 ```
 
 
